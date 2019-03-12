@@ -24,38 +24,40 @@ namespace SR201_Application
 
         static void Main(string[] args)//(ip, port, channel, cycletime of updating)<----all are optional
         {
+            Console.WriteLine("--------------------------------------------------------------");
+            
+            string host = HOST;
+            int port = PORT, channel = CHANNEL, cycleTime = CYCLETIME;
+
+            int tMonth = DateTime.Now.Month;
+
             try
             {
-                string host = HOST;
-                int port = PORT, channel = CHANNEL, cycleTime = CYCLETIME;
+                if (args[0] != null)
+                    host = args[0];
+            }
+            catch (IndexOutOfRangeException e) { }
+            try
+            {
+                if (args[1] != null)
+                    port = int.Parse(args[1]);
+            }
+            catch (IndexOutOfRangeException e) { }
+            try
+            {
+                if (args[2] != null)
+                    channel = int.Parse(args[2]);
+            }
+            catch (IndexOutOfRangeException e) { }
+            try
+            {
+                if (args[3] != null)
+                    cycleTime = int.Parse(args[3]);
+            }
+            catch (IndexOutOfRangeException e) { }
 
-                int tMonth = DateTime.Now.Month;
-
-                try
-                {
-                    if (args[0] != null)
-                        host = args[0];
-                }
-                catch (IndexOutOfRangeException e) { }
-                try
-                {
-                    if (args[1] != null)
-                        port = int.Parse(args[1]);
-                }
-                catch (IndexOutOfRangeException e) { }
-                try
-                {
-                    if (args[2] != null)
-                        channel = int.Parse(args[2]);
-                }
-                catch (IndexOutOfRangeException e) { }
-                try
-                {
-                    if (args[3] != null)
-                        cycleTime = int.Parse(args[3]);
-                }
-                catch (IndexOutOfRangeException e) { }
-
+            try
+            {
                 c = new RelayController(host, port, channel);
 
                 t1 = new Timer(new TimerCallback((Object obj) =>
@@ -121,6 +123,8 @@ namespace SR201_Application
                                  
                             }
                             break;
+                        case "Z":
+                            throw new Exception();
                         case "EXIT":
                         default:
                             break;
@@ -128,7 +132,9 @@ namespace SR201_Application
                 }
             } catch(Exception e)
             {
-                Main(args);
+                t1.Dispose();
+                t2.Dispose();
+                Main(new string[]{ host, port.ToString(), channel.ToString(), cycleTime.ToString() });
                 Debugger.print(e.Message);
             }
         }
@@ -220,16 +226,9 @@ namespace SR201_Application
                         Stream receiveStream = response.GetResponseStream();
                         StreamReader readStream = null;
 
-                        /*if (response.CharacterSet == null)
-                        {
-                            readStream = new StreamReader(receiveStream);
-                        }*/
-
                         readStream = new StreamReader(receiveStream);
 
                         string data = readStream.ReadToEnd();
-                        //Console.WriteLine(data);
-                        //Regex regex = new Regex(@"(sunRise|sunSet)\"">([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])");
                         Regex regex = new Regex(@"(?<=three>)([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])", RegexOptions.IgnoreCase | RegexOptions.Singleline);
                         MatchCollection sss = regex.Matches(data);
 
@@ -306,7 +305,6 @@ namespace SR201_Application
                 {
                     this.client.Close();
                     Debugger.print("Host not FOUND.");
-                    //Debugger.print(e.Message);
                 }
             }
 
